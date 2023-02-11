@@ -10,7 +10,7 @@ func main() {
 		PathLength: 10,
 	}
 	md5shortener := shortener.NewMD5Shortener(md5Config)
-	shortenHandler := NewShortenHandler(md5shortener)
+	shortenHandler := NewShortenHandler(md5shortener, "base/")
 
 	lambda.Start(shortenHandler.handleShorten)
 }
