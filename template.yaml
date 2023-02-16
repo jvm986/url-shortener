@@ -53,6 +53,31 @@ Resources:
           PATH_LENGTH: !Ref PathLength
           ENDPOINT: !Ref Endpoint
 
+  RedirectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: internal/app/redirect
+      Handler: handler
+      Runtime: go1.x
+      Policies:
+        DynamoDBReadPolicy:
+          TableName: !Ref StorageTable
+      Architectures:
+        - x86_64
+      Events:
+        Shorten:
+          Type: Api
+          Properties:
+            Path: /short/{key}
+            Method: GET
+      Environment:
+        Variables:
+          ENV: !Ref Env
+          REGION: !Ref Region
+          STORAGE_TABLE_NAME: !Ref StorageTableName
+          DDB_ENDPOINT: !Ref DDBEndpoint
+          ENDPOINT: !Ref Endpoint
+
   StorageTable:
     Type: AWS::Serverless::SimpleTable
     Properties:

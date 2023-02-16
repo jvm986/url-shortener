@@ -10,4 +10,13 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["ShortenFunction"]
 
+[function_build_definitions.2e4d8208-cbd7-4866-ab28-7d0561872000]
+codeuri = "/Users/jamesmaguire/Projects/url-shortener/internal/app/redirect"
+runtime = "go1.x"
+architecture = "x86_64"
+handler = "handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["RedirectFunction"]
+
 [layer_build_definitions]
