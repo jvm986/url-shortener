@@ -1,3 +1,6 @@
+Env=development
+Region=eu-central-1
 StorageTableName=storage
 PathLength=10
+DDBEndpoint=http://docker.for.mac.localhost:8000/
 Endpoint=http://127.0.0.1:3000/

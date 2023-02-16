@@ -10,11 +10,20 @@ Globals:
     Timeout: 5
 
 Parameters:
+  Env:
+    Type: String
+    AllowedValues:
+      - development
+      - production
+  Region:
+    Type: String
   StorageTableName:
     Type: String
   PathLength:
     Type: Number
   Endpoint:
+    Type: String
+  DDBEndpoint:
     Type: String
 
 Resources:
@@ -37,7 +46,10 @@ Resources:
             Method: POST
       Environment:
         Variables:
+          ENV: !Ref Env
+          REGION: !Ref Region
           STORAGE_TABLE_NAME: !Ref StorageTableName
+          DDB_ENDPOINT: !Ref DDBEndpoint
           PATH_LENGTH: !Ref PathLength
           ENDPOINT: !Ref Endpoint
 
