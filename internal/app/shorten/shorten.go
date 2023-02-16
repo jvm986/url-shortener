@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/jvm986/url-shortener/internal/pkg/shortener"
+	"github.com/jvm986/url-shortener/internal/pkg/storage"
 )
 
 type shortenHandler struct {
 	shortener shortener.Shortener
+	storage   storage.Storage
 	endpoint  string
 }
 
@@ -25,9 +27,14 @@ type ResponseBody struct {
 	RedirectUrl string `json:"redirect_url"`
 }
 
-func NewShortenHandler(shortener shortener.Shortener, endpoint string) *shortenHandler {
+func NewShortenHandler(
+	shortener shortener.Shortener,
+	storage storage.Storage,
+	endpoint string,
+) *shortenHandler {
 	return &shortenHandler{
 		shortener: shortener,
+		storage:   storage,
 		endpoint:  endpoint,
 	}
 }
@@ -56,6 +63,14 @@ func (h *shortenHandler) handleShorten(ctx context.Context, request events.APIGa
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusBadRequest,
 			Body:       fmt.Sprintf("failed to shorten url [%s]", b.Url),
+		}, nil
+	}
+
+	err = h.storage.Set(ctx, key, value)
+	if err != nil {
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Body:       fmt.Sprintf("failed to set storage for [%s]", key),
 		}, nil
 	}
 

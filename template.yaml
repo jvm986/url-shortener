@@ -10,6 +10,8 @@ Globals:
     Timeout: 5
 
 Parameters:
+  StorageTableName:
+    Type: String
   PathLength:
     Type: Number
   Endpoint:
@@ -22,6 +24,9 @@ Resources:
       CodeUri: internal/app/shorten/
       Handler: handler
       Runtime: go1.x
+      Policies:
+        DynamoDBWritePolicy:
+          TableName: !Ref StorageTable
       Architectures:
         - x86_64
       Events:
@@ -32,8 +37,14 @@ Resources:
             Method: POST
       Environment:
         Variables:
+          STORAGE_TABLE_NAME: !Ref StorageTableName
           PATH_LENGTH: !Ref PathLength
           ENDPOINT: !Ref Endpoint
+
+  StorageTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Ref StorageTableName
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
