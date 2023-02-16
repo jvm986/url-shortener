@@ -11,3 +11,10 @@ local-init-storage:
 start-api: build local-init-storage
 	sam local start-api \
 	--parameter-overrides $(shell cat .aws-sam/development-params)
+
+deploy: build
+	sam deploy \
+	--parameter-overrides $(shell cat .aws-sam/production-params) \
+	--stack-name=url-shortener \
+	--resolve-s3 \
+	--capabilities=CAPABILITY_IAM

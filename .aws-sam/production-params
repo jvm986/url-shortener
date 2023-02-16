@@ -1,0 +1,6 @@
+Env=production
+Region=eu-central-1
+StorageTableName=storage
+PathLength=10
+DDBEndpoint=na
+Endpoint=tba
