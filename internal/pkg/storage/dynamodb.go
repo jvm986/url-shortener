@@ -7,11 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/jvm986/url-shortener/internal/pkg/clients/dynamodbclient"
 	"github.com/pkg/errors"
 )
 
 type DynamoDbStorage struct {
-	client       *dynamodb.Client
+	client       dynamodbclient.DynamoDbClient
 	storageTable string
 }
 
@@ -23,7 +24,7 @@ type Entry struct {
 	Value string `dynamodbav:"value"`
 }
 
-func NewDynamoDbStorage(c *dynamodb.Client, cfg DynamoDbStorageConfig) Storage {
+func NewDynamoDbStorage(c dynamodbclient.DynamoDbClient, cfg DynamoDbStorageConfig) Storage {
 	return DynamoDbStorage{
 		client:       c,
 		storageTable: cfg.StorageTable,
