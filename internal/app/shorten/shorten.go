@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/jvm986/url-shortener/internal/pkg/domain"
 	"github.com/jvm986/url-shortener/internal/pkg/shortener"
 	"github.com/jvm986/url-shortener/internal/pkg/storage"
 	"github.com/pkg/errors"
@@ -102,5 +103,6 @@ func (h *shortenHandler) handleShorten(ctx context.Context, request events.APIGa
 	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusCreated,
 		Body:       string(responseBytes),
+		Headers:    domain.GetCorsHeaders(),
 	}, nil
 }

@@ -8,6 +8,12 @@ Description: >
 Globals:
   Function:
     Timeout: 5
+  Api:
+    TracingEnabled: True
+    Cors:
+      AllowMethods: "'GET,POST,OPTIONS'"
+      AllowHeaders: "'content-type'"
+      AllowOrigin: "'*'"
 
 Parameters:
   Env:

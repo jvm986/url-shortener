@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/golang/mock/gomock"
+	"github.com/jvm986/url-shortener/internal/pkg/domain"
 	shortener "github.com/jvm986/url-shortener/internal/pkg/shortener/mocks"
 	storage "github.com/jvm986/url-shortener/internal/pkg/storage/mocks"
 	"github.com/stretchr/testify/assert"
@@ -44,6 +45,7 @@ func TestHandleShorten(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, events.APIGatewayProxyResponse{
 		StatusCode: http.StatusCreated,
+		Headers:    domain.GetCorsHeaders(),
 		Body:       `{"url":"valid-url","key":"key","redirect_url":"base/short/key"}`,
 	}, actual)
 }

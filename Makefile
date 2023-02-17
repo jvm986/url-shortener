@@ -9,7 +9,7 @@ local-init-storage:
 	aws dynamodb create-table --cli-input-json file://.aws-sam/storage-table.json --endpoint-url http://localhost:8000 2>&1 > /dev/null
 
 start-api: build local-init-storage
-	sam local start-api \
+	sam local start-api -p 5000 \
 	--parameter-overrides $(shell cat .aws-sam/development-params)
 
 deploy: build

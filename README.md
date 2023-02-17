@@ -43,7 +43,7 @@ POST with `url` field in body, test with:
 curl --location --request POST 'http://127.0.0.1:5000/shorten' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-    "url": "https://www.moia.io/"
+    "url": "https://example.com/"
 }'
 ```
 
@@ -52,7 +52,7 @@ curl --location --request POST 'http://127.0.0.1:5000/shorten' \
 GET with `id` path parameter, (after populating the db with the above) test with:
 
 ```shell
-curl --location --request GET 'http://127.0.0.1:5000/short/971f4b2176'
+curl --location --request GET 'http://127.0.0.1:5000/short/c984d06aaf'
 ```
 
 ### Run unit tests
@@ -68,11 +68,6 @@ _As this is a back-end challenge, minimal effort was applied to the front-end_. 
 ```shell
 npm --prefix front run start
 ```
-
-## Live Deployment
-
-The web application is also deployed here: http://url-shortener-webbucket-lqpjd53y86y9.s3-website.eu-central-1.amazonaws.com/
-... using the API here: https://l0xb0od05c.execute-api.eu-central-1.amazonaws.com/Prod/
 
 ## Notes
 
