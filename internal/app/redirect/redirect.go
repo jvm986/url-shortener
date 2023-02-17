@@ -8,15 +8,18 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/jvm986/url-shortener/internal/pkg/storage"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type redirectHandler struct {
 	storage storage.Storage
+	log     *zap.Logger
 }
 
-func NewRedirectHandler(dynamoDbStorage storage.Storage) *redirectHandler {
+func NewRedirectHandler(dynamoDbStorage storage.Storage, log *zap.Logger) *redirectHandler {
 	return &redirectHandler{
 		storage: dynamoDbStorage,
+		log:     log,
 	}
 }
 
@@ -24,7 +27,8 @@ func (h *redirectHandler) handleRedirect(ctx context.Context, request events.API
 	p := request.PathParameters
 	key, ok := p["key"]
 	if !ok {
-		e := fmt.Sprintf("missing path parameter on [%s]", request.Path)
+		e := "missing path parameter"
+		h.log.Sugar().With("path", request.Path).Error(e)
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusBadRequest,
 			Body:       e,
@@ -34,12 +38,14 @@ func (h *redirectHandler) handleRedirect(ctx context.Context, request events.API
 	url, err := h.storage.Get(ctx, key)
 	var nfe *storage.NotFoundError
 	if errors.As(err, &nfe) {
+		h.log.Sugar().With("key", key).Error(err.Error())
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusNotFound,
 			Body:       fmt.Sprintf("key [%s] not found in storage", key),
 		}, nil
 	}
 	if err != nil {
+		h.log.Sugar().With("key", key).Error(err.Error())
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       "failed to get from storage",

@@ -9,12 +9,15 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/jvm986/url-shortener/internal/pkg/shortener"
 	"github.com/jvm986/url-shortener/internal/pkg/storage"
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type shortenHandler struct {
 	shortener shortener.Shortener
 	storage   storage.Storage
 	endpoint  string
+	log       *zap.Logger
 }
 
 type RequestBody struct {
@@ -31,11 +34,13 @@ func NewShortenHandler(
 	shortener shortener.Shortener,
 	storage storage.Storage,
 	endpoint string,
+	log *zap.Logger,
 ) *shortenHandler {
 	return &shortenHandler{
 		shortener: shortener,
 		storage:   storage,
 		endpoint:  endpoint,
+		log:       log,
 	}
 }
 
@@ -43,7 +48,8 @@ func (h *shortenHandler) handleShorten(ctx context.Context, request events.APIGa
 	b := &RequestBody{}
 	err := json.Unmarshal([]byte(request.Body), b)
 	if err != nil {
-		e := fmt.Sprintf("failed to unmarshal request body [%s]", request.Body)
+		e := "failed to unmarshal request body"
+		h.log.Sugar().With("requestBody", request.Body).Error(errors.Wrap(err, e))
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusBadRequest,
 			Body:       e,
@@ -51,7 +57,8 @@ func (h *shortenHandler) handleShorten(ctx context.Context, request events.APIGa
 	}
 
 	if b.Url == "" {
-		e := fmt.Sprintf("bad request body [%s]", request.Body)
+		e := "no or empty url field in request body"
+		h.log.Sugar().With("requestBody", request.Body).Error(e)
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusBadRequest,
 			Body:       e,
@@ -60,6 +67,7 @@ func (h *shortenHandler) handleShorten(ctx context.Context, request events.APIGa
 
 	key, value, err := h.shortener.Shorten(b.Url)
 	if err != nil {
+		h.log.Sugar().With("url", b.Url).Error(err.Error())
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusBadRequest,
 			Body:       fmt.Sprintf("failed to shorten url [%s]", b.Url),
@@ -68,6 +76,7 @@ func (h *shortenHandler) handleShorten(ctx context.Context, request events.APIGa
 
 	err = h.storage.Set(ctx, key, value)
 	if err != nil {
+		h.log.Sugar().With("key", key, "value", value).Error(err.Error())
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       fmt.Sprintf("failed to set storage for [%s]", key),
@@ -83,6 +92,7 @@ func (h *shortenHandler) handleShorten(ctx context.Context, request events.APIGa
 	responseBytes, err := json.Marshal(responseBody)
 	if err != nil {
 		e := "failed to marshal response body"
+		h.log.Sugar().With("responseBody", responseBody).Error(err.Error())
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       e,

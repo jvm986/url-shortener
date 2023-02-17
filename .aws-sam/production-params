@@ -3,4 +3,4 @@ Region=eu-central-1
 StorageTableName=storage
 PathLength=10
 DDBEndpoint=na
-Endpoint=tba
+Endpoint=https://5d7exwfave.execute-api.eu-central-1.amazonaws.com/Prod/

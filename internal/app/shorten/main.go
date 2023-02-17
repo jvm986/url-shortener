@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strconv"
 
@@ -12,19 +11,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/jvm986/url-shortener/internal/pkg/shortener"
 	"github.com/jvm986/url-shortener/internal/pkg/storage"
+	"go.uber.org/zap"
 )
 
 func main() {
 	ctx := context.Background()
 
+	log, err := zap.NewProduction()
+	if err != nil {
+		panic("failed to init logger")
+	}
+
 	pathLengthString, ok := os.LookupEnv("PATH_LENGTH")
 	if !ok {
-		panic("failed to lookup PATH_LENGTH from environment variables")
+		log.Sugar().Fatal("failed to lookup PATH_LENGTH from environment variables")
 	}
 
 	pathLength, err := strconv.Atoi(pathLengthString)
 	if err != nil {
-		panic(fmt.Sprintf("PATH_LENGTH [%s] is not an integer", pathLengthString))
+		log.Sugar().With("pathLength", pathLengthString).Fatal("PATH_LENGTH is not an integer")
 	}
 
 	md5Config := shortener.MD5ShortenerConfig{
@@ -34,26 +39,26 @@ func main() {
 
 	endpoint, ok := os.LookupEnv("ENDPOINT")
 	if !ok {
-		panic("failed to lookup ENDPOINT from environment variables")
+		log.Sugar().Fatal("failed to lookup ENDPOINT from environment variables")
 	}
 
 	storageTable, ok := os.LookupEnv("STORAGE_TABLE_NAME")
 	if !ok {
-		panic("failed to lookup STORAGE_TABLE_NAME from environment variables")
+		log.Sugar().Fatal("failed to lookup STORAGE_TABLE_NAME from environment variables")
 	}
 
 	env, ok := os.LookupEnv("ENV")
 	if !ok {
-		panic("failed to lookup ENV from environment variables")
+		log.Sugar().Fatal("failed to lookup ENV from environment variables")
 	}
 	dynamodbEndpoint, ok := os.LookupEnv("DDB_ENDPOINT")
 	if !ok {
-		panic("failed to lookup DDB_ENDPOINT from environment variables")
+		log.Sugar().Fatal("failed to lookup DDB_ENDPOINT from environment variables")
 	}
 
 	awsRegion, ok := os.LookupEnv("REGION")
 	if !ok {
-		panic("failed to lookup REGION from environment variables")
+		log.Sugar().Fatal("failed to lookup REGION from environment variables")
 	}
 
 	dynamodbEndpointResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
@@ -72,7 +77,7 @@ func main() {
 		config.WithEndpointResolverWithOptions(dynamodbEndpointResolver),
 	)
 	if err != nil {
-		panic("failed to load aws config")
+		log.Sugar().Fatal("failed to load aws config")
 	}
 
 	dynamodbClient := dynamodb.NewFromConfig(awsConfig)
@@ -83,7 +88,7 @@ func main() {
 
 	dynamodbStorage := storage.NewDynamoDbStorage(dynamodbClient, dynamodbStorageConfig)
 
-	shortenHandler := NewShortenHandler(md5shortener, dynamodbStorage, endpoint)
+	shortenHandler := NewShortenHandler(md5shortener, dynamodbStorage, endpoint, log)
 
 	lambda.Start(shortenHandler.handleShorten)
 }

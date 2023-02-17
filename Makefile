@@ -18,3 +18,10 @@ deploy: build
 	--stack-name=url-shortener \
 	--resolve-s3 \
 	--capabilities=CAPABILITY_IAM
+
+test:
+	go test ./...
+
+test-cover:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out

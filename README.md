@@ -1,140 +1,102 @@
-# url-shortener
+# URL-Shortener
 
-This is a sample template for url-shortener - Below is a brief explanation of what we have generated for you:
+URL-Shortener is a web application which performs the simple task of mapping a shortened url (or id) to a valid full url and redirecting the user.
 
-```bash
-.
-├── Makefile                    <-- Make to automate build
-├── README.md                   <-- This instructions file
-├── hello-world                 <-- Source code for a lambda function
-│   ├── main.go                 <-- Lambda function code
-│   └── main_test.go            <-- Unit tests
-└── template.yaml
-```
+<img width="494" alt="Screenshot 2022-10-23 at 12 49 41" src="https://user-images.githubusercontent.com/88666178/197388434-4d5fcf25-bfd9-4343-a663-77341e481886.png">
 
-## Requirements
+_The irony that the "shortened" url is significantly longer than the original is not lost on me_
 
-* AWS CLI already configured with Administrator permission
-* [Docker installed](https://www.docker.com/community-edition)
-* [Golang](https://golang.org)
-* SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+## Run locally
 
-## Setup process
+Requirements:
 
-### Installing dependencies & building the target 
+- [golang](https://go.dev/)
+- [aws-cli](https://aws.amazon.com/cli/)
+- [sam-cli](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+- [docker](https://www.docker.com/)
+- [npm](https://www.npmjs.com/)
 
-In this example we use the built-in `sam build` to automatically download all the dependencies and package our build target.   
-Read more about [SAM Build here](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-cli-command-reference-sam-build.html) 
+### Run the API
 
-The `sam build` command is wrapped inside of the `Makefile`. To execute this simply run
- 
-```shell
-make
-```
+Depending on your operating system you might have to update a configuration file to handle docker networking (see To Dos for fix)
 
-### Local development
+Currently configured for mac, in `.aws-sam/development-params`, the value `DDBEndpoint=http://docker.for.mac.localhost:8000/` should be updated for:
 
-**Invoking function locally through local API Gateway**
+- Linux: `http://127.0.0.1:8000`
+- Windows: `http://docker.for.windows.localhost:8000/`
 
-```bash
-sam local start-api
-```
-
-If the previous command ran successfully you should now be able to hit the following local endpoint to invoke your function `http://localhost:3000/hello`
-
-**SAM CLI** is used to emulate both Lambda and API Gateway locally and uses our `template.yaml` to understand how to bootstrap this environment (runtime, where the source code is, etc.) - The following excerpt is what the CLI will read in order to initialize an API and its routes:
-
-```yaml
-...
-Events:
-    HelloWorld:
-        Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-        Properties:
-            Path: /hello
-            Method: get
-```
-
-## Packaging and deployment
-
-AWS Lambda Golang runtime requires a flat folder with the executable generated on build step. SAM will use `CodeUri` property to know where to look up for the application:
-
-```yaml
-...
-    FirstFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            CodeUri: hello_world/
-            ...
-```
-
-To deploy your application for the first time, run the following in your shell:
-
-```bash
-sam deploy --guided
-```
-
-The command will package and deploy your application to AWS, with a series of prompts:
-
-* **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
-* **AWS Region**: The AWS region you want to deploy your app to.
-* **Confirm changes before deploy**: If set to yes, any change sets will be shown to you before execution for manual review. If set to no, the AWS SAM CLI will automatically deploy application changes.
-* **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example, create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modifies IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
-* **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
-
-You can find your API Gateway Endpoint URL in the output values displayed after deployment.
-
-### Testing
-
-We use `testing` package that is built-in in Golang and you can simply run the following command to run our tests:
+To run the application:
 
 ```shell
-go test -v ./hello-world/
+make local-start-api
 ```
-# Appendix
 
-### Golang installation
+This command runs an instance of `amazon/dynamodb-local` and the `sam` application api.
 
-Please ensure Go 1.x (where 'x' is the latest version) is installed as per the instructions on the official golang website: https://golang.org/doc/install
+### API Endpoints
 
-A quickstart way would be to use Homebrew, chocolatey or your linux package manager.
+`/shorten`
 
-#### Homebrew (Mac)
-
-Issue the following command from the terminal:
+POST with `url` field in body, test with:
 
 ```shell
-brew install golang
+curl --location --request POST 'http://127.0.0.1:5000/shorten' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "url": "https://www.moia.io/"
+}'
 ```
 
-If it's already installed, run the following command to ensure it's the latest version:
+`/short/{id}`
+
+GET with `id` path parameter, (after populating the db with the above) test with:
 
 ```shell
-brew update
-brew upgrade golang
+curl --location --request GET 'http://127.0.0.1:5000/short/971f4b2176'
 ```
 
-#### Chocolatey (Windows)
+### Run unit tests
 
-Issue the following command from the powershell:
+Run unit tests with `make test` and get coverage report with `make test-cover`
+
+The main `happy path` functionality is covered by these tests, but it is important to extend these cases to better coverage
+
+### Run the Web Application
+
+_As this is a back-end challenge, minimal effort was applied to the front-end_. Run the react app with:
 
 ```shell
-choco install golang
+npm --prefix front run start
 ```
 
-If it's already installed, run the following command to ensure it's the latest version:
+## Live Deployment
 
-```shell
-choco upgrade golang
-```
+The web application is also deployed here: http://url-shortener-webbucket-lqpjd53y86y9.s3-website.eu-central-1.amazonaws.com/
+... using the API here: https://l0xb0od05c.execute-api.eu-central-1.amazonaws.com/Prod/
 
-## Bringing to the next level
+## Notes
 
-Here are a few ideas that you can use to get more acquainted as to how this overall process works:
+### "[...] as short as possible" vs "unique"
 
-* Create an additional API resource (e.g. /hello/{proxy+}) and return the name requested through this new path
-* Update unit test to capture that
-* Package & Deploy
+I chose to use a very simple id generator, the first 8 characters (configurable in `.aws-sam/{environment}-params` with `PathLength`) of an md5 hash of the sanitized url. This mechanism does not guarantee zero collision (see https://en.wikipedia.org/wiki/Birthday_attack), however given that there are no real security concerns in this use-case I believe it is a suitable solution. In the case of 10,000 entries there is a roughly 1.1% chance of collision (`1 - e^(-10000^2 / (2 * 16^8))`), if we increase this from 8 characters to 10, this chance reduces to 0.0045%.
+The reason for choosing this approach is a fast, simple application that can handle concurrent requests without bloat.
+To avoid any collision we could check the database, shift the slice from the original hash until a unique id is found.
 
-Next, you can use the following resources to know more about beyond hello world samples and how others structure their Serverless applications:
+### AWS SAM (Serverless Application Model)
 
-* [AWS Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/)
+I chose to use aws-sam to handle a lot of the application functionality, this was largely because I wanted to familiarize myself with the technology. It is very nice to be able to quickly and easily spin-up http endpoints on golang lambdas and the system is perfect for an application of this complexity.
+
+### Hexagonal Architecture
+
+I tried to align the design of the application to the concept of hexagonal architecture. So it should be relatively painless to switch out the storage provider (to redis for example), as well as the shortener (for a better algorithm or other solution).
+See https://medium.com/@matiasvarela/hexagonal-architecture-in-go-cfd4e436faa3
+
+## To do
+
+- **Introduce TTL**, in order to protect against collision we could introduce a time to live on each entry. ✅
+- **Improve id generator**, either with a better hashing algorithm, database sanity checks (will add to the response time), or for fun with a word dictionary (`verb`-`noun`, e.g. `running`-`monkey`)
+- **Extend unit-test coverage**, due to time constraints I only wrote `happy path` test cases for the most part
+- **Acceptance tests**, to ensure the database is configured correctly and the application is working end-to-end I would like to write acceptance tests
+- **Improve deployment / local**, implement automated deployments with a CI/CD process, using `docker-compose` make running locally easier
+- **Handle 404s**, due to time contraints the application doesn't currently handle cases where a short url is `not found`, we could add a 404 route on the redirect function
+- **Sort query parmeters**, we could reduce the number of entries in the database by sorting query parmeters
